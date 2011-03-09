@@ -91,7 +91,7 @@ $.stanbolConnector = {
             success: function (data, textStatus, jqXHR){
                 cb(data);
             },
-            error: options.error
+            error: (options && options.error)?options.error:this.options.error
         });
     },
     getEntityLabel: function(item, lan){
