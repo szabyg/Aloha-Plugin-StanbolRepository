@@ -13,7 +13,7 @@ GENTICS.Aloha.Repositories.stanbolRepository = new GENTICS.Aloha.Repository('iks
  * @property
  * @cfg
  */
-GENTICS.Aloha.Repositories.stanbolRepository.settings.stanbolUrl = 'http://stanbol.iksfordrupal.net:9000/entityhub';
+GENTICS.Aloha.Repositories.stanbolRepository.settings.stanbolUrl = 'http://localhost:8080/';
 
 /**
  * Init method of the repository. Called from Aloha Core to initialize this repository
@@ -27,37 +27,27 @@ GENTICS.Aloha.Repositories.stanbolRepository.init = function() {
 	if ( this.settings.weight + 0.15 > 1 ) {
 		this.settings.weight = 1 - 0.15;
 	}
+	this.sites = [];
 	
+	// curl -X POST -F "query=@srfgquery.json" http://localhost:8080/entityhub/site/dbpedia/query?'
 	// default delicious URL. Returns most popular links.
-	this.deliciousURL = "http://feeds.delicious.com/v2/json/";
 	
-	if ( this.settings.username ) {
-		
-		// if a username is set use public user links
-		this.deliciousURL += this.settings.username + '/';
+	$.stanbolConnector.setConfig({stanbolUrl: this.settings.stanbolUrl});
+	$.stanbolConnector.isAlive(function(alive){
+	    if(!alive)
+            alert(that.stanbolUrl + " is not reachable!");
+        else {
+            console.info("Connection to stanbol at " + that.stanbolUrl + " is OK");
+	        $.stanbolConnector.getSites(function(cb){
+	            that.sites = cb;
+	        });
+	    }
+	});
 	
-		// set the repository name
-		this.repositoryName = 'deliciuos/' + this.settings.username;
-		
-		// when a user is specified get his tags and store it local
-		this.tags = [];
-		
-		jQuery.ajax({ type: "GET",
-			dataType: "jsonp",
-			url: 'http://feeds.delicious.com/v2/json/tags/'+that.settings.username,
-			success: function(data) {
-				// convert data
-				for (var tag in data) {
-					that.tags.push(tag);
-				}
-			}
-		});
-	} else {
-		// set the repository name
-		this.repositoryName = 'deliciuos/' + popular;
+	
+	// set the repository name
+	this.repositoryName = 'Stanbol';// + popular;
 
-		this.deliciousURL += 'tag/';
-	}
 };
 
 /** 
@@ -76,9 +66,32 @@ GENTICS.Aloha.Repositories.stanbolRepository.init = function() {
  * @param {object} params object with properties
  * @param {function} callback this method must be called with all result items
  */
-GENTICS.Aloha.Repositories.stanbolRepository.query = function( params, callback ) { 
-// get items
-	callback.call( this, items);
+GENTICS.Aloha.Repositories.stanbolRepository.query = function( p, callback ) { 
+    var items = [];
+    var that = this;
+    if ( p.objectTypeFilter && jQuery.inArray('website', p.objectTypeFilter) == -1) {
+        callback.call( that, []);
+    } else {
+        var site = "dbPedia";
+        s = p.query + "*";
+        $.stanbolConnector.entityhubQuery(site, s, function(data){
+	        for (var i = 0; i < data.length; i++) {
+	            var item = data[i];
+		        if (typeof data[i] != 'function' ) {
+		            var label = $.stanbolConnector.getEntityLabel(item, "en");
+			        items.push(new GENTICS.Aloha.Repository.Document ({
+				        id: item.id,
+				        name: label,
+				        repositoryId: that.repositoryId,
+				        type: 'website', 
+				        url: item.id,
+				        weight: that.settings.weight + (15-1)/100
+			        }));
+		        }
+            }
+        	callback.call( that, items);
+        });
+	}
 };
 
 /**
@@ -94,8 +107,28 @@ GENTICS.Aloha.Repositories.stanbolRepository.query = function( params, callback 
  * @param {function} callback this method must be called with all result items
  */
 GENTICS.Aloha.Repositories.stanbolRepository.getChildren = function( params, callback ) { 
-// get items
-	callback.call( this, items);
+/*
+				success: function(data) {
+					var items = [];
+					// convert data
+					for (var tag in data) {
+						// the id is tag[+tag+...+tag]
+						var id = (p.inFolderId)?p.inFolderId + '+' + tag:tag;
+						if (typeof data[tag] != 'function' ) {
+							items.push(new GENTICS.Aloha.Repository.Folder({
+								id: id,
+								name: tag,
+								repositoryId: that.repositoryId,
+								type: 'tag', 
+								url: 'http://feeds.delicious.com/v2/rss/tags/'+that.settings.username+'/'+id,
+								hasMoreItems: true
+							}));
+						}
+					}
+					callback.call( that, items);
+				}
+*/
+    callback.call( that, []);
 };
 
 
