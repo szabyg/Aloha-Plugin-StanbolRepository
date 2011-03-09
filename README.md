@@ -1,6 +1,6 @@
 # Stanbol entityhub repository
 
-With this repository you can create links using a [http://incubator.apache.org/stanbol/](stanbol) instance.
+With this repository you can create links using a [stanbol](http://incubator.apache.org/stanbol/) instance.
 
 ## How to Install
 ### Load scripts
