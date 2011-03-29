@@ -35,9 +35,9 @@ GENTICS.Aloha.Repositories.stanbolRepository.init = function() {
 	$.stanbolConnector.setConfig({stanbolUrl: this.settings.stanbolUrl});
 	$.stanbolConnector.isAlive(function(alive){
 	    if(!alive)
-            alert(that.stanbolUrl + " is not reachable!");
+            alert(that.settings.stanbolUrl + " is not reachable!");
         else {
-            console.info("Connection to stanbol at " + that.stanbolUrl + " is OK");
+            console.info("Connection to stanbol at " + that.settings.stanbolUrl + " is OK");
 	        $.stanbolConnector.getSites(function(cb){
 	            that.sites = cb;
 	        });
@@ -69,7 +69,7 @@ GENTICS.Aloha.Repositories.stanbolRepository.init = function() {
 GENTICS.Aloha.Repositories.stanbolRepository.query = function( p, callback ) { 
     var items = [];
     var that = this;
-    if ( p.objectTypeFilter && jQuery.inArray('website', p.objectTypeFilter) == -1) {
+    if ( p.objectTypeFilter.length && jQuery.inArray('website', p.objectTypeFilter) == -1) {
         callback.call( that, []);
     } else {
         var site = "dbPedia";
@@ -151,7 +151,7 @@ GENTICS.Aloha.Repositories.stanbolRepository.makeClean = function (obj) {
  * @return void
  */
 GENTICS.Aloha.Repositories.stanbolRepository.markObject = function (obj, repositoryItem) {
-	obj.attr('data-stanbolRepository').text(resourceItem.name);
+	// obj.attr('data-stanbolRepository').text(resourceItem.name);
 };
 
 
